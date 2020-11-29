@@ -3,7 +3,7 @@
  (public_name chat)
  (preprocess
   (pps ppx_jane))
- (libraries bonsai_revery core_kernel))
+ (libraries bonsai_revery core))
 
 (install
  (section bin)

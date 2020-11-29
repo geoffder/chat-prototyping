@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@opam/bonsai": "v0.14.0",
+    "@opam/core": "*",
     "bonsai_revery": "geoffder/bonsai_revery#master"
   },
   "devDependencies": {

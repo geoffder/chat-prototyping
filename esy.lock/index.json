@@ -1,6 +1,6 @@
 {
-  "checksum": "5c41216074ddc624a2e432ff81dd6407",
-  "root": "chat@link-dev:./package.json",
+  "checksum": "58a0078b09d6a39fbf114fa9ab1371c1",
+  "root": "chat_prototyping@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
       "id":
@@ -289,9 +289,9 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "chat@link-dev:./package.json": {
-      "id": "chat@link-dev:./package.json",
-      "name": "chat",
+    "chat_prototyping@link-dev:./package.json": {
+      "id": "chat_prototyping@link-dev:./package.json",
+      "name": "chat_prototyping",
       "version": "link-dev:./package.json",
       "source": {
         "type": "link-dev",
@@ -300,7 +300,8 @@
       },
       "overrides": [],
       "dependencies": [
-        "bonsai_revery@github:geoffder/bonsai_revery#2351c4a200b8751861bee0f9bf684cb38111dbc3@d41d8cd9",
+        "bonsai_revery@github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e@d41d8cd9",
+        "@opam/core@opam:v0.14.0@7f87deba",
         "@opam/bonsai@opam:v0.14.0@0624dd8d"
       ],
       "devDependencies": [
@@ -309,16 +310,16 @@
         "@opam/dune@opam:2.7.1@f5f493bc"
       ]
     },
-    "bonsai_revery@github:geoffder/bonsai_revery#2351c4a200b8751861bee0f9bf684cb38111dbc3@d41d8cd9": {
+    "bonsai_revery@github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e@d41d8cd9": {
       "id":
-        "bonsai_revery@github:geoffder/bonsai_revery#2351c4a200b8751861bee0f9bf684cb38111dbc3@d41d8cd9",
+        "bonsai_revery@github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e@d41d8cd9",
       "name": "bonsai_revery",
       "version":
-        "github:geoffder/bonsai_revery#2351c4a200b8751861bee0f9bf684cb38111dbc3",
+        "github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e",
       "source": {
         "type": "install",
         "source": [
-          "github:geoffder/bonsai_revery#2351c4a200b8751861bee0f9bf684cb38111dbc3"
+          "github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e"
         ]
       },
       "overrides": [],
@@ -837,6 +838,35 @@
         "ocaml@4.9.1000@d41d8cd9", "@opam/ocamlbuild@opam:0.14.0@6ac75d03"
       ]
     },
+    "@opam/timezone@opam:v0.14.0@cb0f29c2": {
+      "id": "@opam/timezone@opam:v0.14.0@cb0f29c2",
+      "name": "@opam/timezone",
+      "version": "opam:v0.14.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/41/41a3d1bc43d3215e44018674776b07ca#md5:41a3d1bc43d3215e44018674776b07ca",
+          "archive:https://ocaml.janestreet.com/ocaml-core/v0.14/files/timezone-v0.14.0.tar.gz#md5:41a3d1bc43d3215e44018674776b07ca"
+        ],
+        "opam": {
+          "name": "timezone",
+          "version": "v0.14.0",
+          "path": "esy.lock/opam/timezone.v0.14.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/ppx_jane@opam:v0.14.0@5ca18f3b",
+        "@opam/dune@opam:2.7.1@f5f493bc",
+        "@opam/core_kernel@opam:v0.14.1@57ed4e8e",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/ppx_jane@opam:v0.14.0@5ca18f3b",
+        "@opam/dune@opam:2.7.1@f5f493bc",
+        "@opam/core_kernel@opam:v0.14.1@57ed4e8e"
+      ]
+    },
     "@opam/time_now@opam:v0.14.0@5e4046b3": {
       "id": "@opam/time_now@opam:v0.14.0@5e4046b3",
       "name": "@opam/time_now",
@@ -982,6 +1012,31 @@
         "@opam/ppx_bench@opam:v0.14.1@7d666102",
         "@opam/ppx_assert@opam:v0.14.0@877b5900",
         "@opam/dune@opam:2.7.1@f5f493bc", "@opam/base@opam:v0.14.0@8bc55fce"
+      ]
+    },
+    "@opam/spawn@opam:v0.13.0@b3937806": {
+      "id": "@opam/spawn@opam:v0.13.0@b3937806",
+      "name": "@opam/spawn",
+      "version": "opam:v0.13.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/6e/6eaadbf8f9231415b51658da6b8b090f#md5:6eaadbf8f9231415b51658da6b8b090f",
+          "archive:https://github.com/janestreet/spawn/releases/download/v0.13.0/spawn-v0.13.0.tbz#md5:6eaadbf8f9231415b51658da6b8b090f"
+        ],
+        "opam": {
+          "name": "spawn",
+          "version": "v0.13.0",
+          "path": "esy.lock/opam/spawn.v0.13.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/dune@opam:2.7.1@f5f493bc",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/dune@opam:2.7.1@f5f493bc"
       ]
     },
     "@opam/sexplib0@opam:v0.14.0@ddeb6438": {
@@ -3799,6 +3854,45 @@
         "@opam/base_quickcheck@opam:v0.14.0@2535c934",
         "@opam/base_bigstring@opam:v0.14.0@cf8b2c90",
         "@opam/base@opam:v0.14.0@8bc55fce"
+      ]
+    },
+    "@opam/core@opam:v0.14.0@7f87deba": {
+      "id": "@opam/core@opam:v0.14.0@7f87deba",
+      "name": "@opam/core",
+      "version": "opam:v0.14.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/57/571dc65fff922c86951068d66e4a05ca#md5:571dc65fff922c86951068d66e4a05ca",
+          "archive:https://ocaml.janestreet.com/ocaml-core/v0.14/files/core-v0.14.0.tar.gz#md5:571dc65fff922c86951068d66e4a05ca"
+        ],
+        "opam": {
+          "name": "core",
+          "version": "v0.14.0",
+          "path": "esy.lock/opam/core.v0.14.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/timezone@opam:v0.14.0@cb0f29c2",
+        "@opam/spawn@opam:v0.13.0@b3937806",
+        "@opam/sexplib@opam:v0.14.0@f67f18de",
+        "@opam/ppx_jane@opam:v0.14.0@5ca18f3b",
+        "@opam/jst-config@opam:v0.14.0@d0d7469e",
+        "@opam/dune@opam:2.7.1@f5f493bc",
+        "@opam/core_kernel@opam:v0.14.1@57ed4e8e",
+        "@opam/base-threads@opam:base@36803084",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/timezone@opam:v0.14.0@cb0f29c2",
+        "@opam/spawn@opam:v0.13.0@b3937806",
+        "@opam/sexplib@opam:v0.14.0@f67f18de",
+        "@opam/ppx_jane@opam:v0.14.0@5ca18f3b",
+        "@opam/jst-config@opam:v0.14.0@d0d7469e",
+        "@opam/dune@opam:2.7.1@f5f493bc",
+        "@opam/core_kernel@opam:v0.14.1@57ed4e8e",
+        "@opam/base-threads@opam:base@36803084"
       ]
     },
     "@opam/conf-pkg-config@opam:1.3@93481236": {
