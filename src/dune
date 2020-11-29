@@ -1,0 +1,11 @@
+(executable
+ (name main)
+ (public_name chat)
+ (preprocess
+  (pps ppx_jane))
+ (libraries bonsai_revery core_kernel))
+
+(install
+ (section bin)
+ (package chat_prototyping)
+ (files FontAwesome5FreeSolid.otf bonsai.png))

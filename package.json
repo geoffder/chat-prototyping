@@ -1,0 +1,29 @@
+{
+  "name": "chat_prototyping",
+  "version": "0.0.1",
+  "description": "Playground for bonsai_revery chat frontend",
+  "license": "",
+  "homepage": "",
+  "esy": {
+    "build": "dune build -p #{self.name}",
+    "buildsInSource": "_build"
+  },
+  "scripts": {
+    "format": "esy dune build @fmt --auto-promote",
+    "run": "esy x chat"
+  },
+  "dependencies": {
+    "@opam/bonsai": "v0.14.0",
+    "bonsai_revery": "geoffder/bonsai_revery#master"
+  },
+  "devDependencies": {
+    "ocaml": "~4.9.0",
+    "@opam/dune": ">= 2.5.0",
+    "@opam/ocaml-lsp-server": "*"
+  },
+  "resolutions": {
+    "esy-sdl2": "2.0.10008",
+    "@opam/lru": "bryphe/lru:lru.opam#2708c70",
+    "revery": "revery-ui/revery#5fe4207"
+  }
+}
