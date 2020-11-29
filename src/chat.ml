@@ -71,34 +71,13 @@ let emojis =
 
 module EmojiBox = EmojiText ((val make_emoji_config ~big_scale:2. emojis))
 
-module Filter = struct
+module Comment = struct
   type t =
-    | All
-    | Active
-    | Completed
-  [@@deriving sexp, equal]
-
-  let to_string (v : t) =
-    match v with
-    | All -> "All"
-    | Active -> "Active"
-    | Completed -> "Completed"
-end
-
-module Todo = struct
-  type t =
-    { title : string
-    ; completed : bool
+    { author : string
+    ; content : string
+    ; timestamp : string
     }
   [@@deriving sexp, equal, fields]
-
-  let toggle todo = { todo with completed = not todo.completed }
-
-  let is_visible { completed; _ } ~filter =
-    match filter with
-    | Filter.All -> true
-    | Active -> not completed
-    | Completed -> completed
 end
 
 module Input = struct
@@ -107,30 +86,17 @@ end
 
 module Model = struct
   type t =
-    { todos : Todo.t Map.M(Int).t
-    ; filter : Filter.t
-    }
+    { comments : Comment.t Map.M(Int).t }
   [@@deriving sexp, equal]
 
   let default =
-    { todos =
-        Todo.
-          [ 0, { title = "Buy Milk"; completed = false }
-          ; 1, { title = "Wag the Dog"; completed = true }
-          ]
-        |> Map.of_alist_exn (module Int)
-    ; filter = Filter.All
-    }
+    { comments = Map.empty (module Int) }
 end
 
 module Action = struct
   type t =
-    | Add of string
-    | Set_filter of Filter.t
-    | Toggle of int
+    | Post of Comment.t
     | Remove of int
-    | Toggle_all
-    | Clear_completed
   [@@deriving sexp_of]
 end
 
