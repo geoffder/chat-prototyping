@@ -1,83 +1,16 @@
-open Core_kernel
+open Core
 open Bonsai_revery
 open Bonsai_revery.Components
 open Bonsai.Infix
 
-module type EMOJI_CONFIG = sig
-  val emojis : (string, Attr.KindSpec.Image.source, String.comparator_witness) Map.t
-  val box_style : Style.t list
-  val emoji_style : Style.t list
-  val size : int
-  val big_scale : float
-end
-
-let make_emoji_config
-    ?(box_style = Style.[ flex_direction `Row; justify_content `FlexStart ])
-    ?(emoji_style = [])
-    ?(size = 30)
-    ?(big_scale = 1.)
-    emojis
-  =
-  ( module struct
-    let emojis = emojis
-    let box_style = box_style
-    let emoji_style = emoji_style
-    let size = size
-    let big_scale = big_scale
-  end : EMOJI_CONFIG )
-
-
-module EmojiText (Config : EMOJI_CONFIG) = struct
-  open Config
-
-  let rgx = Str.regexp ":[a-z0-9_]+:"
-
-  let only_emojis parts =
-    List.for_all parts ~f:(function
-      | Str.Delim _ | Str.Text " " -> true
-      | _ -> false)
-
-
-  let small_style = Style.(width size :: height size :: emoji_style)
-
-  let big_style =
-    let scaled = Int.of_float (Float.of_int size *. big_scale) in
-    Style.(width scaled :: height scaled :: emoji_style)
-
-
-  let emoji_style big = if big then big_style else small_style
-
-  let make text_attrs input_text =
-    let parts = Str.full_split rgx input_text in
-    let big = only_emojis parts in
-    let code_to_component code =
-      String.strip ~drop:(Char.equal ':') code
-      |> Map.find emojis
-      |> function
-        | Some source ->
-          image Attr.[ style (emoji_style big); kind KindSpec.(ImageNode (Image.make ~source ())) ]
-        | None -> text text_attrs code in
-    let f = function
-      | Str.Text s -> text text_attrs s
-      | Str.Delim s -> code_to_component s in
-    parts |> List.map ~f |> box Attr.[ style box_style ]
-end
-
-let emojis =
-  [ "bonsai", "bonsai.png" ]
-  |> Map.of_alist_exn (module String)
-  |> Map.map ~f:(fun p -> Attr.KindSpec.Image.File p)
-
-
-module EmojiBox = EmojiText ((val make_emoji_config ~big_scale:2. emojis))
+open Inline_emojis
 
 module Comment = struct
   type t =
-    { author : string
-    ; content : string
+    { author    : string
+    ; content   : string
     ; timestamp : string
-    }
-  [@@deriving sexp, equal, fields]
+    } [@@deriving sexp, equal, fields]
 end
 
 module Input = struct
@@ -86,11 +19,14 @@ end
 
 module Model = struct
   type t =
-    { comments : Comment.t Map.M(Int).t }
-  [@@deriving sexp, equal]
+    { user     : string
+    ; comments : Comment.t Map.M(Int).t
+    } [@@deriving sexp, equal]
 
   let default =
-    { comments = Map.empty (module Int) }
+    { user     = "Steve"
+    ; comments = Map.empty (module Int)
+    }
 end
 
 module Action = struct
@@ -137,7 +73,6 @@ module Styles = struct
       ; overflow `Hidden
       ]
 
-
   let bonsai =
     Style.
       [ align_self `FlexStart
@@ -149,7 +84,6 @@ module Styles = struct
       ; height 150
       ]
 
-
   let title =
     Style.
       [ color Theme.title_text_color
@@ -158,9 +92,10 @@ module Styles = struct
       ; text_wrap NoWrap
       ]
 
-
   let title_font =
-    Attr.KindSpec.update_text ~f:(fun a -> { a with size = Theme.rem 4. }) Theme.font_info
+    Attr.KindSpec.update_text
+      ~f:(fun a -> { a with size = Theme.rem 4. })
+      Theme.font_info
 end
 
 module Components = struct
@@ -178,9 +113,9 @@ module Components = struct
               ~width:1
               ~color:
                 ( match selected, hovered with
-                | true, _ -> Theme.button_color
-                | false, true -> Theme.hovered_button_color
-                | false, false -> Colors.transparent_white )
+                  | true, _ -> Theme.button_color
+                  | false, true -> Theme.hovered_button_color
+                  | false, false -> Colors.transparent_white )
           ; border_radius 2.
           ]
 
@@ -194,119 +129,86 @@ module Components = struct
     let view ~selected on_click title =
       button
         (fun ~hovered ->
-          [ Attr.style (List.append Styles.text (Styles.box ~selected ~hovered))
-          ; Attr.on_click on_click
-          ; Attr.kind Styles.font
-          ])
+           [ Attr.style (List.append Styles.text (Styles.box ~selected ~hovered))
+           ; Attr.on_click on_click
+           ; Attr.kind Styles.font
+           ])
         title
   end
 
-  module Checkbox = struct
-    module Input = struct
-      type t =
-        { checked : bool
-        ; on_toggle : Event.t
-        }
-    end
-
+  module Author = struct
     module Styles = struct
-      let box =
-        Style.
-          [ width (Theme.remi 1.5)
-          ; height (Theme.remi 1.5)
-          ; justify_content `Center
-          ; align_items `Center
-          ; Theme.panel_border
-          ]
+      let box = Style.[ margin 6; flex_direction `Row; align_self `FlexStart ]
 
-
-      let checkmark =
-        Style.[ color Theme.hovered_button_color; text_wrap NoWrap; transform [ TranslateY 2. ] ]
-
-
-      let checkmark_font =
+      let author_text = Style.[ color Theme.text_color ]
+      let author_font =
         Attr.KindSpec.update_text
-          ~f:(fun a -> { a with family = Revery.Font.Family.fromFile "FontAwesome5FreeSolid.otf" })
+          ~f:(fun a -> { a with size = Theme.rem 1.25 })
+          Theme.font_info
+
+      let timestamp_text = Style.[ align_self `Center; color Theme.text_color; margin_left 20]
+      let timestamp_font =
+        Attr.KindSpec.update_text
+          ~f:(fun a -> { a with size = Theme.rem 0.5 })
           Theme.font_info
     end
 
-    let view ~checked ~on_toggle =
+    let view ~author ~timestamp =
       box
-        Attr.[ on_click on_toggle; style Styles.box ]
+        Attr.[ style Styles.box ]
         [ text
-            Attr.[ style Styles.checkmark; kind Styles.checkmark_font ]
-            (if checked then {||} else "")
+            Attr.[ style Styles.author_text; kind Styles.author_font ]
+            author
+        ; text
+            Attr.[ style Styles.timestamp_text; kind Styles.timestamp_font ]
+            timestamp
         ]
   end
 
-  module Todo = struct
+  module Content = struct
+    module Styles = struct
+      let text = Style.[ color Theme.text_color; text_wrap NoWrap; flex_wrap `Wrap ]
+      let font = Theme.font_info
+    end
+
+    let emojis =
+      [ "bonsai", "bonsai.png" ]
+      |> Map.of_alist_exn (module String)
+      |> Map.map ~f:(fun p -> Attr.KindSpec.Image.File p)
+
+    module EmojiBox = EmojiText ((val make_emoji_config ~big_scale:2. emojis))
+
+    let view ~content =
+      box
+        Attr.[ style Style.[ margin_left 6 ] ]
+        [ EmojiBox.make
+            Attr.[ style Styles.text; kind Styles.font ]
+            content
+        ]
+  end
+
+  module Comment = struct
     module Styles = struct
       let box =
         Style.
-          [ flex_direction `Row
+          [ flex_direction `Column
           ; margin 2
           ; padding_vertical 4
-          ; padding_horizontal 8
-          ; align_items `Center
+          ; align_items `FlexStart
           ; background_color Theme.panel_background
           ; Theme.panel_border
           ]
-
-
-      let text is_checked =
-        Style.
-          [ margin 6
-          ; color (if is_checked then Theme.dimmed_text_color else Theme.text_color)
-          ; flex_grow 1
-          ]
-
-
-      let remove_button is_hovered =
-        Style.
-          [ color
-              ( match is_hovered with
-              | true -> Theme.danger_color
-              | false -> Colors.transparent_white )
-          ; transform [ TranslateY 2. ]
-          ; margin_right 6
-          ]
-
-
-      let remove_button_font =
-        Attr.KindSpec.update_text
-          ~f:(fun a -> { a with family = Revery.Font.Family.fromFile "FontAwesome5FreeSolid.otf" })
-          Theme.font_info
     end
 
-    let view ~task:_ = box Attr.[ style Styles.box ] []
-    let emojis = [ "bonsai", "bonsai.png" ] |> Map.of_alist_exn (module String)
-
-    let remove_flex_grow =
-      List.filter ~f:(function
-        | `FlexGrow _ -> false
-        | _ -> true)
-
-
     let component =
-      Bonsai.pure ~f:(fun ((key : int), (todo : Todo.t), (inject : Action.t -> Event.t)) ->
+      Bonsai.pure ~f:(fun ((key : int), (comment : Comment.t), (inject : Action.t -> Event.t)) ->
+          let { Comment.author; content; timestamp  } = comment in
           box
             Attr.[ style Styles.box ]
-            [ Checkbox.view ~checked:todo.completed ~on_toggle:(inject (Action.Toggle key))
-              (* ; text Attr.[ style (Styles.text todo.completed); kind Theme.font_info ] todo.title *)
-            ; EmojiBox.make
-                Attr.
-                  [ style (Styles.text todo.completed |> remove_flex_grow); kind Theme.font_info ]
-                todo.title
-            ; box
-                Attr.[ on_click Event.no_op ]
-                [ text
-                    Attr.[ style (Styles.remove_button false); kind Styles.remove_button_font ]
-                    {||}
-                ]
-            ])
+            [ Author.view ~author ~timestamp; Content.view ~content ])
   end
 
-  module Add_todo = struct
+  module AddComment = struct
     module Styles = struct
       let container =
         Style.
@@ -318,152 +220,43 @@ module Components = struct
           ; overflow `Hidden
           ]
 
-
-      let toggle_all all_completed =
-        Style.
-          [ color (if all_completed then Theme.text_color else Theme.dimmed_text_color)
-          ; transform [ TranslateY 2. ]
-          ; margin_left 12
-          ]
-
-
-      let toggle_all_font =
-        Attr.KindSpec.update_text
-          ~f:(fun a -> { a with family = Revery.Font.Family.fromFile "FontAwesome5FreeSolid.otf" })
-          Theme.font_info
-
-
       let input = Style.[ border ~width:0 ~color:Colors.transparent_white; width 4000 ]
     end
 
-    let view ~all_completed ~on_toggle_all children =
-      box
-        Attr.[ style Styles.container ]
-        ( box
-            Attr.[ on_click on_toggle_all ]
-            [ text
-                Attr.[ style (Styles.toggle_all all_completed); kind Styles.toggle_all_font ]
-                {||}
-            ]
-        :: children )
-  end
-
-  module Footer = struct
-    module Styles = struct
-      let container =
-        let open Style in
-        [ flex_direction `Row; justify_content `SpaceBetween ]
-
-
-      let filterButtonsContainer =
-        let open Style in
-        [ flex_grow 1
-        ; width 0
-        ; flex_direction `Row
-        ; align_items `Center
-        ; justify_content `Center
-        ; align_self `Center
-        ; transform [ TranslateY (-2.) ]
-        ]
-
-
-      let left_flex_container = Style.[ flex_grow 1; width 0 ]
-
-      let right_flex_container =
-        Style.[ flex_grow 1; width 0; flex_direction `Row; justify_content `FlexEnd ]
-
-
-      let items_left = Style.[ color Theme.button_color; text_wrap NoWrap ]
-
-      let clear_completed isHovered =
-        Style.
-          [ color (if isHovered then Theme.hovered_button_color else Theme.button_color)
-          ; text_wrap NoWrap
-          ]
-
-
-      let font =
-        Attr.KindSpec.update_text ~f:(fun a -> { a with size = Theme.rem 0.85 }) Theme.font_info
-    end
-
-    let view ~inject ~active_count ~completed_count ~current_filter =
-      let items_left =
-        text Attr.[ style Styles.items_left; kind Styles.font ]
-        @@
-        match active_count with
-        | 1 -> "1 item left"
-        | n -> Printf.sprintf "%i items left" n in
-      let filter_buttons_view =
-        let button filter =
-          Button.view
-            ~selected:(Filter.equal current_filter filter)
-            (inject (Action.Set_filter filter))
-            (Filter.to_string filter) in
-        box
-          Attr.[ style Styles.filterButtonsContainer ]
-          [ button All; button Active; button Completed ] in
-
-      let clear_completed =
-        let text =
-          match completed_count with
-          | 0 -> ""
-          | n -> Printf.sprintf "Clear completed (%i)" n in
-
-        button
-          (fun ~hovered ->
-            Attr.
-              [ on_click (inject Action.Clear_completed)
-              ; style (Styles.clear_completed hovered)
-              ; kind Styles.font
-              ])
-          text in
-
-      box
-        Attr.[ style Styles.container ]
-        [ box Attr.[ style Styles.left_flex_container ] [ items_left ]
-        ; filter_buttons_view
-        ; box Attr.[ style Styles.right_flex_container ] [ clear_completed ]
-        ]
+    let view children = box Attr.[ style Styles.container ] (box [] [] :: children)
   end
 end
 
-let todo_list =
-  let%map.Bonsai todos =
-    Tuple2.map_fst ~f:(fun model ->
-        Map.filter model.Model.todos ~f:(Todo.is_visible ~filter:model.filter))
-    @>> Bonsai.Map.associ_input_with_extra (module Int) Components.Todo.component in
-  box Attr.[ style Style.[ flex_grow 1 ] ] (Map.data todos)
-
+let comment_list =
+  let%map.Bonsai comments =
+    Tuple2.map_fst ~f:(fun (model : Model.t) -> model.comments)
+    @>> Bonsai.Map.associ_input_with_extra (module Int) Components.Comment.component in
+  box
+    Attr.[ style Style.[ flex_direction `ColumnReverse; flex_grow 1 ] ]
+    (Map.data comments |> List.rev)
 
 let text_input =
-  Bonsai.pure ~f:(fun (_model, inject) ->
+  Bonsai.pure ~f:(fun ((model : Model.t), inject) ->
       Text_input.props
-        ~placeholder:"Add your Todo here!"
+        ~placeholder:""
         ~autofocus:true
         ~on_key_down:(fun event value set_value ->
-          match event.key with
-          | Return when not (String.is_empty value) ->
-            Event.Many [ inject (Action.Add value); set_value "" ]
-          | _ -> Event.no_op)
+            match event.key with
+            | Return when not (String.is_empty value) ->
+              let timestamp =
+                Time.now ()
+                |> Time.to_string_trimmed ~zone:(Lazy.force Timezone.local)
+              in
+              let comment = { Comment.author = model.user; content = value; timestamp } in
+              Event.Many [ inject (Action.Post comment); set_value "" ]
+            | _ -> Event.no_op)
         Attr.[ kind Theme.font_info ])
   >>> Text_input.component
 
-
-let add_todo =
+let add_comment =
   let%map.Bonsai model, inject = Bonsai.pure ~f:Fn.id
   and _value, _set_value, text_input = text_input in
-  let all_completed = Map.for_all model.Model.todos ~f:Todo.completed in
-
-  Components.Add_todo.view ~all_completed ~on_toggle_all:(inject Action.Toggle_all) [ text_input ]
-
-
-let footer =
-  Bonsai.pure ~f:(fun (model, inject) ->
-      let completed_count = Map.count model.Model.todos ~f:Todo.completed in
-      let active_count = Map.length model.todos - completed_count in
-
-      Components.Footer.view ~inject ~active_count ~completed_count ~current_filter:model.filter)
-
+  Components.AddComment.view [ text_input ]
 
 let state_component =
   Bonsai.state_machine
@@ -471,46 +264,32 @@ let state_component =
     (module Action)
     [%here]
     ~default_model:Model.default
-    ~apply_action:(fun ~inject:_ ~schedule_event:_ () model -> function
-      | Add title ->
+    ~apply_action:begin fun ~inject:_ ~schedule_event:_ () model -> function
+      | Post comment ->
         let key =
-          match Map.max_elt model.todos with
+          match Map.max_elt model.comments with
           | Some (key, _) -> key + 1
           | None -> 0 in
-        let todos = Map.add_exn model.todos ~key ~data:{ title; completed = false } in
-        { model with todos }
-      | Toggle key ->
-        let todos = Map.change model.todos key ~f:(Option.map ~f:Todo.toggle) in
-        { model with todos }
-      | Remove key ->
-        let todos = Map.remove model.todos key in
-        { model with todos }
-      | Set_filter filter -> { model with filter }
-      | Toggle_all ->
-        let are_all_completed = Map.for_all model.todos ~f:Todo.completed in
-        let todos =
-          Map.map model.todos ~f:(fun todo -> { todo with completed = not are_all_completed }) in
-        { model with todos }
-      | Clear_completed ->
-        let todos = Map.filter model.todos ~f:(Fun.negate Todo.completed) in
-        { model with todos })
-
+        let comments = Map.add_exn model.comments ~key ~data:comment in
+        { model with comments }
+      | Remove key -> { model with comments = Map.remove model.comments key }
+    end
 
 let app : (unit, Element.t) Bonsai_revery.Bonsai.t =
-  state_component
-  >>> let%map.Bonsai todo_list = todo_list
-      and add_todo = add_todo
-      and footer = footer in
-      let title = text Attr.[ style Styles.title; kind Styles.title_font ] "todoMVC" in
-      let bonsai =
-        image
-          Attr.
-            [ style Styles.bonsai
-            ; kind KindSpec.(ImageNode (Image.make ~source:(Image.File Theme.bonsai_path) ()))
-            ] in
-      let header =
-        box
-          Attr.[ style Style.[ justify_content `FlexStart; flex_direction `Row ] ]
-          [ bonsai; title ] in
-
-      box Attr.[ style Styles.app_container ] [ header; add_todo; todo_list; footer ]
+  state_component >>>
+  let%map.Bonsai comment_list = comment_list
+  and add_comment = add_comment
+  in
+  let title = text Attr.[ style Styles.title; kind Styles.title_font ] "Chatter" in
+  let bonsai =
+    image
+      Attr.
+        [ style Styles.bonsai
+        ; kind KindSpec.(ImageNode (Image.make ~source:(Image.File Theme.bonsai_path) ()))
+        ] in
+  let header =
+    box
+      Attr.[ style Style.[ justify_content `FlexStart; flex_direction `Row ] ]
+      [ bonsai; title ]
+  in
+  box Attr.[ style Styles.app_container ] [ header; comment_list; add_comment ]
