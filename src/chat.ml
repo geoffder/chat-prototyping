@@ -2,15 +2,15 @@ open Core
 open Bonsai_revery
 open Bonsai_revery.Components
 open Bonsai.Infix
-
 open Inline_emojis
 
 module Comment = struct
   type t =
-    { author    : string
-    ; content   : string
+    { author : string
+    ; content : string
     ; timestamp : string
-    } [@@deriving sexp, equal, fields]
+    }
+  [@@deriving sexp, equal, fields]
 end
 
 module Input = struct
@@ -19,14 +19,12 @@ end
 
 module Model = struct
   type t =
-    { user     : string
+    { user : string
     ; comments : Comment.t Map.M(Int).t
-    } [@@deriving sexp, equal]
-
-  let default =
-    { user     = "Steve"
-    ; comments = Map.empty (module Int)
     }
+  [@@deriving sexp, equal]
+
+  let default = { user = "Steve"; comments = Map.empty (module Int) }
 end
 
 module Action = struct
@@ -93,9 +91,7 @@ module Styles = struct
       ]
 
   let title_font =
-    Attr.KindSpec.update_text
-      ~f:(fun a -> { a with size = Theme.rem 4. })
-      Theme.font_info
+    Attr.KindSpec.update_text ~f:(fun a -> { a with size = Theme.rem 4. }) Theme.font_info
 end
 
 module Components = struct
@@ -113,40 +109,43 @@ module Components = struct
               ~width:1
               ~color:
                 ( match selected, hovered with
-                  | true, _ -> Theme.button_color
-                  | false, true -> Theme.hovered_button_color
-                  | false, false -> Colors.transparent_white )
+                | true, _      -> Theme.button_color
+                | false, true  -> Theme.hovered_button_color
+                | false, false -> Colors.transparent_white )
           ; border_radius 2.
           ]
-
 
       let text = Style.[ color Theme.button_color; text_wrap NoWrap ]
 
       let font =
-        Attr.KindSpec.update_text ~f:(fun a -> { a with size = Theme.rem 0.8 }) Theme.font_info
+        Attr.KindSpec.update_text
+          ~f:(fun a -> { a with size = Theme.rem 0.8 })
+          Theme.font_info
     end
 
     let view ~selected on_click title =
       button
         (fun ~hovered ->
-           [ Attr.style (List.append Styles.text (Styles.box ~selected ~hovered))
-           ; Attr.on_click on_click
-           ; Attr.kind Styles.font
-           ])
+          [ Attr.style (List.append Styles.text (Styles.box ~selected ~hovered))
+          ; Attr.on_click on_click
+          ; Attr.kind Styles.font
+          ])
         title
   end
 
   module Author = struct
     module Styles = struct
       let box = Style.[ margin 6; flex_direction `Row; align_self `FlexStart ]
-
       let author_text = Style.[ color Theme.text_color ]
+
       let author_font =
         Attr.KindSpec.update_text
           ~f:(fun a -> { a with size = Theme.rem 1.25 })
           Theme.font_info
 
-      let timestamp_text = Style.[ align_self `Center; color Theme.text_color; margin_left 20]
+      let timestamp_text =
+        Style.[ align_self `Center; color Theme.text_color; margin_left 20 ]
+
       let timestamp_font =
         Attr.KindSpec.update_text
           ~f:(fun a -> { a with size = Theme.rem 0.5 })
@@ -156,12 +155,8 @@ module Components = struct
     let view ~author ~timestamp =
       box
         Attr.[ style Styles.box ]
-        [ text
-            Attr.[ style Styles.author_text; kind Styles.author_font ]
-            author
-        ; text
-            Attr.[ style Styles.timestamp_text; kind Styles.timestamp_font ]
-            timestamp
+        [ text Attr.[ style Styles.author_text; kind Styles.author_font ] author
+        ; text Attr.[ style Styles.timestamp_text; kind Styles.timestamp_font ] timestamp
         ]
   end
 
@@ -181,10 +176,7 @@ module Components = struct
     let view ~content =
       box
         Attr.[ style Style.[ margin_left 6 ] ]
-        [ EmojiBox.make
-            Attr.[ style Styles.text; kind Styles.font ]
-            content
-        ]
+        [ EmojiBox.make Attr.[ style Styles.text; kind Styles.font ] content ]
   end
 
   module Comment = struct
@@ -201,8 +193,9 @@ module Components = struct
     end
 
     let component =
-      Bonsai.pure ~f:(fun ((key : int), (comment : Comment.t), (inject : Action.t -> Event.t)) ->
-          let { Comment.author; content; timestamp  } = comment in
+      Bonsai.pure
+        ~f:(fun ((key : int), (comment : Comment.t), (inject : Action.t -> Event.t)) ->
+          let { Comment.author; content; timestamp } = comment in
           box
             Attr.[ style Styles.box ]
             [ Author.view ~author ~timestamp; Content.view ~content ])
@@ -230,7 +223,8 @@ end
 let comment_list =
   let%map.Bonsai comments =
     Tuple2.map_fst ~f:(fun (model : Model.t) -> model.comments)
-    @>> Bonsai.Map.associ_input_with_extra (module Int) Components.Comment.component in
+    @>> Bonsai.Map.associ_input_with_extra (module Int) Components.Comment.component
+  in
   box
     Attr.[ style Style.[ flex_direction `ColumnReverse; flex_grow 1 ] ]
     (Map.data comments |> List.rev)
@@ -241,15 +235,14 @@ let text_input =
         ~placeholder:""
         ~autofocus:true
         ~on_key_down:(fun event value set_value ->
-            match event.key with
-            | Return when not (String.is_empty value) ->
-              let timestamp =
-                Time.now ()
-                |> Time.to_string_trimmed ~zone:(Lazy.force Timezone.local)
-              in
-              let comment = { Comment.author = model.user; content = value; timestamp } in
-              Event.Many [ inject (Action.Post comment); set_value "" ]
-            | _ -> Event.no_op)
+          match event.key with
+          | Return when not (String.is_empty value) ->
+            let timestamp =
+              Time.now () |> Time.to_string_trimmed ~zone:(Lazy.force Timezone.local)
+            in
+            let comment = { Comment.author = model.user; content = value; timestamp } in
+            Event.Many [ inject (Action.Post comment); set_value "" ]
+          | _ -> Event.no_op)
         Attr.[ kind Theme.font_info ])
   >>> Text_input.component
 
@@ -264,32 +257,37 @@ let state_component =
     (module Action)
     [%here]
     ~default_model:Model.default
-    ~apply_action:begin fun ~inject:_ ~schedule_event:_ () model -> function
-      | Post comment ->
-        let key =
-          match Map.max_elt model.comments with
-          | Some (key, _) -> key + 1
-          | None -> 0 in
-        let comments = Map.add_exn model.comments ~key ~data:comment in
-        { model with comments }
-      | Remove key -> { model with comments = Map.remove model.comments key }
-    end
+    ~apply_action:
+      begin
+        fun ~inject:_ ~schedule_event:_ () model -> function
+        | Post comment ->
+          let key =
+            match Map.max_elt model.comments with
+            | Some (key, _) -> key + 1
+            | None          -> 0
+          in
+          let comments = Map.add_exn model.comments ~key ~data:comment in
+          { model with comments }
+        | Remove key   -> { model with comments = Map.remove model.comments key }
+      end
 
 let app : (unit, Element.t) Bonsai_revery.Bonsai.t =
-  state_component >>>
-  let%map.Bonsai comment_list = comment_list
-  and add_comment = add_comment
-  in
-  let title = text Attr.[ style Styles.title; kind Styles.title_font ] "Chatter" in
-  let bonsai =
-    image
-      Attr.
-        [ style Styles.bonsai
-        ; kind KindSpec.(ImageNode (Image.make ~source:(Image.File Theme.bonsai_path) ()))
-        ] in
-  let header =
-    box
-      Attr.[ style Style.[ justify_content `FlexStart; flex_direction `Row ] ]
-      [ bonsai; title ]
-  in
-  box Attr.[ style Styles.app_container ] [ header; comment_list; add_comment ]
+  state_component
+  >>> let%map.Bonsai comment_list = comment_list
+      and add_comment = add_comment in
+      let title = text Attr.[ style Styles.title; kind Styles.title_font ] "Chatter" in
+      let bonsai =
+        image
+          Attr.
+            [ style Styles.bonsai
+            ; kind
+                KindSpec.(
+                  ImageNode (Image.make ~source:(Image.File Theme.bonsai_path) ()))
+            ]
+      in
+      let header =
+        box
+          Attr.[ style Style.[ justify_content `FlexStart; flex_direction `Row ] ]
+          [ bonsai; title ]
+      in
+      box Attr.[ style Styles.app_container ] [ header; comment_list; add_comment ]
