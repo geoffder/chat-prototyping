@@ -155,7 +155,11 @@ module Components = struct
     end
 
     let emojis =
-      [ "bonsai", "bonsai.png" ]
+      [ "bonsai", "bonsai.png"
+      ; "pogchamp", "pogchamp.png"
+      ; "admonish", "admonish.png"
+      ; "dunno_left", "dunno_left.png"
+      ]
       |> Map.of_alist_exn (module String)
       |> Map.map ~f:(fun p -> Attr.KindSpec.Image.File p)
 

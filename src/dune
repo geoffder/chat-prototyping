@@ -8,4 +8,8 @@
 (install
  (section bin)
  (package chat_prototyping)
- (files FontAwesome5FreeSolid.otf bonsai.png))
+ (files FontAwesome5FreeSolid.otf 
+        bonsai.png 
+        pogchamp.png 
+        admonish.png 
+        dunno_left.png))
