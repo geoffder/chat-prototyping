@@ -300,7 +300,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "bonsai_revery@github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e@d41d8cd9",
+        "bonsai_revery@github:geoffder/bonsai_revery#d4c5d2c794b913507593db6660bb38e8c5225a67@d41d8cd9",
         "@opam/core@opam:v0.14.0@7f87deba",
         "@opam/bonsai@opam:v0.14.0@0624dd8d"
       ],
@@ -310,16 +310,16 @@
         "@opam/dune@opam:2.7.1@f5f493bc"
       ]
     },
-    "bonsai_revery@github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e@d41d8cd9": {
+    "bonsai_revery@github:geoffder/bonsai_revery#d4c5d2c794b913507593db6660bb38e8c5225a67@d41d8cd9": {
       "id":
-        "bonsai_revery@github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e@d41d8cd9",
+        "bonsai_revery@github:geoffder/bonsai_revery#d4c5d2c794b913507593db6660bb38e8c5225a67@d41d8cd9",
       "name": "bonsai_revery",
       "version":
-        "github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e",
+        "github:geoffder/bonsai_revery#d4c5d2c794b913507593db6660bb38e8c5225a67",
       "source": {
         "type": "install",
         "source": [
-          "github:geoffder/bonsai_revery#5f4d847a24df1b5d26d8f392b775c0644ac7331e"
+          "github:geoffder/bonsai_revery#d4c5d2c794b913507593db6660bb38e8c5225a67"
         ]
       },
       "overrides": [],

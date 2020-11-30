@@ -95,44 +95,6 @@ module Styles = struct
 end
 
 module Components = struct
-  module Button = struct
-    module Styles = struct
-      let box ~selected ~hovered =
-        Style.
-          [ position `Relative
-          ; justify_content `Center
-          ; align_items `Center
-          ; padding_vertical (Theme.remi 0.15)
-          ; padding_horizontal (Theme.remi 0.5)
-          ; margin_horizontal (Theme.remi 0.2)
-          ; border
-              ~width:1
-              ~color:
-                ( match selected, hovered with
-                | true, _      -> Theme.button_color
-                | false, true  -> Theme.hovered_button_color
-                | false, false -> Colors.transparent_white )
-          ; border_radius 2.
-          ]
-
-      let text = Style.[ color Theme.button_color; text_wrap NoWrap ]
-
-      let font =
-        Attr.KindSpec.update_text
-          ~f:(fun a -> { a with size = Theme.rem 0.8 })
-          Theme.font_info
-    end
-
-    let view ~selected on_click title =
-      button
-        (fun ~hovered ->
-          [ Attr.style (List.append Styles.text (Styles.box ~selected ~hovered))
-          ; Attr.on_click on_click
-          ; Attr.kind Styles.font
-          ])
-        title
-  end
-
   module Author = struct
     module Styles = struct
       let box = Style.[ margin 6; flex_direction `Row; align_self `FlexStart ]
@@ -150,13 +112,39 @@ module Components = struct
         Attr.KindSpec.update_text
           ~f:(fun a -> { a with size = Theme.rem 0.5 })
           Theme.font_info
+
+      let remove_button ~hovered =
+        Style.
+          [ color
+              ( match hovered with
+              | true  -> Theme.danger_color
+              | false -> Colors.black )
+          ; transform [ TranslateY 2. ]
+          ; margin_left 10
+          ]
+
+      let remove_button_font =
+        Attr.KindSpec.update_text
+          ~f:(fun a ->
+            { a with family = Revery.Font.Family.fromFile "FontAwesome5FreeSolid.otf" })
+          Theme.font_info
     end
 
-    let view ~author ~timestamp =
+    let remove_button key inject =
+      button
+        (fun ~hovered ->
+          [ Attr.style (Styles.remove_button ~hovered)
+          ; Attr.on_click (Event.Many [ inject (Action.Remove key) ])
+          ; Attr.kind Styles.remove_button_font
+          ])
+        {||}
+
+    let view ~key ~inject ~author ~timestamp =
       box
         Attr.[ style Styles.box ]
         [ text Attr.[ style Styles.author_text; kind Styles.author_font ] author
         ; text Attr.[ style Styles.timestamp_text; kind Styles.timestamp_font ] timestamp
+        ; remove_button key inject
         ]
   end
 
@@ -198,7 +186,7 @@ module Components = struct
           let { Comment.author; content; timestamp } = comment in
           box
             Attr.[ style Styles.box ]
-            [ Author.view ~author ~timestamp; Content.view ~content ])
+            [ Author.view ~key ~inject ~author ~timestamp; Content.view ~content ])
   end
 
   module AddComment = struct
