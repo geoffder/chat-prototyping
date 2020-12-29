@@ -3,11 +3,11 @@ open Bonsai_revery
 open Bonsai_revery.Components
 
 module type EMOJI_CONFIG = sig
-  val emojis      : Attr.KindSpec.Image.source Map.M(String).t
-  val box_style   : Style.t list
+  val emojis : Attr.KindSpec.Image.source Map.M(String).t
+  val box_style : Style.t list
   val emoji_style : Style.t list
-  val size        : int
-  val big_scale   : float
+  val size : int
+  val big_scale : float
 end
 
 let make_emoji_config
@@ -31,10 +31,9 @@ module EmojiText (Config : EMOJI_CONFIG) = struct
   let rgx = Str.regexp ":[a-z0-9_]+:"
 
   let only_emojis parts =
-    List.for_all parts ~f:begin function
-      | Str.Delim _ | Str.Text " " -> true
-      | _ -> false
-    end
+    List.for_all parts ~f:(function
+        | Str.Delim _ | Str.Text " " -> true
+        | _                          -> false)
 
   let small_style = Style.(width size :: height size :: emoji_style)
 
@@ -52,12 +51,14 @@ module EmojiText (Config : EMOJI_CONFIG) = struct
       |> Map.find emojis
       |> function
       | Some source ->
-        image Attr.[ style (emoji_style big)
-                   ; kind KindSpec.(ImageNode (Image.make ~source ()))
-                   ]
-      | None -> text text_attrs code in
+        image
+          Attr.
+            [ style (emoji_style big); kind KindSpec.(ImageNode (Image.make ~source ())) ]
+      | None        -> text text_attrs code
+    in
     let f = function
       | Str.Text s  -> text text_attrs s
-      | Str.Delim s -> code_to_component s in
+      | Str.Delim s -> code_to_component s
+    in
     parts |> List.map ~f |> box Attr.[ style box_style ]
 end

@@ -63,7 +63,7 @@ module Styles = struct
       ; left 0
       ; right 0
       ; align_items `Stretch
-      ; justify_content `Center
+      ; justify_content `FlexStart
       ; flex_direction `Column
       ; background_color Theme.app_background
       ; padding_vertical 2
@@ -74,8 +74,8 @@ module Styles = struct
   let bonsai =
     Style.
       [ align_self `FlexStart
-      ; margin_top (Theme.remi 2.)
-      ; margin_bottom (Theme.remi 2.)
+      ; margin_top (Theme.remi 1.)
+      ; margin_bottom (Theme.remi 1.)
       ; margin_left 50
       ; margin_right 100
       ; width 150
@@ -86,8 +86,9 @@ module Styles = struct
     Style.
       [ color Theme.title_text_color
       ; align_self `Center
-      ; margin_top (Theme.remi 2.)
+      ; margin_top (Theme.remi 1.)
       ; text_wrap NoWrap
+      ; flex_grow 1
       ]
 
   let title_font =
@@ -150,7 +151,9 @@ module Components = struct
 
   module Content = struct
     module Styles = struct
-      let text = Style.[ color Theme.text_color; text_wrap NoWrap; flex_wrap `Wrap ]
+      let text =
+        Style.[ color Theme.text_color; text_wrap WrapIgnoreWhitespace; flex_wrap `Wrap ]
+
       let font = Theme.font_info
     end
 
@@ -163,7 +166,21 @@ module Components = struct
       |> Map.of_alist_exn (module String)
       |> Map.map ~f:(fun p -> Attr.KindSpec.Image.File p)
 
-    module EmojiBox = EmojiText ((val make_emoji_config ~big_scale:2. emojis))
+    (* NOTE: This, with the text style accomplishes a decent feel of text wrapping
+     * with emojis WITHOUT newlines, but when they are introduced, the text box of course
+     * just expands, with the next emoji simply coming in at the next spot in the growing
+     * row. What is the best way to achieve the hybrid? Must there be inner boxes with Row
+     * flex and wrap, within a column flex box? (with strings broken up by newlines to
+     * be placed in separate boxes accordingly?) *)
+    let box_style =
+      Style.
+        [ flex_direction `Row
+        ; flex_wrap `Wrap
+        ; justify_content `FlexStart
+        ; align_items `FlexStart
+        ]
+
+    module EmojiBox = EmojiText ((val make_emoji_config ~big_scale:2. ~box_style emojis))
 
     let view ~content =
       box
@@ -203,6 +220,7 @@ module Components = struct
           ; margin 2
           ; align_items `Center
           ; overflow `Hidden
+          ; flex_grow 1
           ]
 
       let input = Style.[ border ~width:0 ~color:Colors.transparent_white; width 4000 ]
@@ -217,8 +235,17 @@ let comment_list =
     Tuple2.map_fst ~f:(fun (model : Model.t) -> model.comments)
     @>> Bonsai.Map.associ_input_with_extra (module Int) Components.Comment.component
   in
+  (* TODO: calculate max height based on height of container? *)
   box
-    Attr.[ style Style.[ flex_direction `ColumnReverse; flex_grow 1 ] ]
+    Attr.
+      [ style
+          Style.
+            [ flex_direction `ColumnReverse
+            ; flex_grow 100
+            ; max_height 765
+            ; overflow `Hidden
+            ]
+      ]
     (Map.data comments |> List.rev)
 
 let text_input =
