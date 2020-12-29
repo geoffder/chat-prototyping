@@ -171,7 +171,16 @@ module Components = struct
      * just expands, with the next emoji simply coming in at the next spot in the growing
      * row. What is the best way to achieve the hybrid? Must there be inner boxes with Row
      * flex and wrap, within a column flex box? (with strings broken up by newlines to
-     * be placed in separate boxes accordingly?) *)
+     * be placed in separate boxes accordingly?)
+     *
+     * From looking at mardown.re of Revery, this seems to be the case. The container is
+     * columnar, and the markdown is parsed into blocks e.g. paragraphs, code, lists, etc,
+     * then they are mapped into elements to be the children of the columnar block.
+     * Therefore, linebreaks become an empty ( " " ) text element (taking a row). So far,
+     * this is simple to translate wrt text, but wanting emojis inline with the text means
+     * that I will need to have row flexed inline emoji boxes as a "paragraph" level element
+     * existing within the outer column flex. Newlines will break the input string into
+     * separate emoji boxes. *)
     let box_style =
       Style.
         [ flex_direction `Row
